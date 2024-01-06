@@ -37,7 +37,8 @@ contract ClaimService is IClaimSerivce, CommomStorage {
         hasMarkedResultMap[scamHash] = true;
         marksResultMap[scamHash] = MarkResult({
             isScam: isAgreeWin,
-            totalVoter: list.length,
+            agreeVoter: scoreBoard.agree.length,
+            againstVoter: scoreBoard.against.length,
             ratio: scoreBoard.agreeScore * 100 / (scoreBoard.agreeScore + scoreBoard.againstScore)
         });
 
