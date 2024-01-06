@@ -31,7 +31,8 @@ contract ClaimService is IClaimSerivce, CommomStorage {
         ScoreBoard storage scoreBoard = scoreBoardMap[scamHash];
 
         bool isAgreeWin = scoreBoard.agreeScore >= scoreBoard.againstScore;
-        address[] memory list = isAgreeWin ? scoreBoard.agree : scoreBoard.against;
+        address[] memory rewardList = isAgreeWin ? scoreBoard.agree : scoreBoard.against;
+        address[] memory burnList = !isAgreeWin ? scoreBoard.agree : scoreBoard.against;
         mapping(address => uint256) storage index = isAgreeWin ? scoreBoard.agreeIndex : scoreBoard.againstIndex;
 
         hasMarkedResultMap[scamHash] = true;
@@ -42,13 +43,20 @@ contract ClaimService is IClaimSerivce, CommomStorage {
             ratio: scoreBoard.agreeScore * 100 / (scoreBoard.agreeScore + scoreBoard.againstScore)
         });
 
-        for(uint256 i = 0; i < list.length; i++) {
-            address winner = list[i];
-            uint256 voterDepositAmount = index[list[i]];
+        for(uint256 i = 0; i < rewardList.length; i++) {
+            address winner = rewardList[i];
+            uint256 voterDepositAmount = index[rewardList[i]];
             uint256 systeamRewardAmount = _getSysteamReward();
 
             Credit(tokenAddr).mint(winner, systeamRewardAmount);
             IERC20(tokenAddr).transfer(winner, voterDepositAmount);
+        }
+
+        for(uint256 i = 0; i < burnList.length; i++) {
+            address loser = burnList[i];
+            uint256 voterDepositAmount = index[burnList[i]];
+
+            Credit(tokenAddr).burnFrom(loser, voterDepositAmount);
         }
     }
 

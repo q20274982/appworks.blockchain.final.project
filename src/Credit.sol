@@ -3,8 +3,9 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 
-contract Credit is ERC20 {
+contract Credit is ERC20, ERC20Burnable {
     uint256 private _maximumSupply;
 
     constructor(uint256 maximumSupply_) ERC20("Credit", "CRE") {

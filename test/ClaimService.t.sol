@@ -136,9 +136,12 @@ contract ClaimServiceTest is Test {
         // voter get expected reward & deposit
         assertEq(Credit(credit).balanceOf(agreeVoters[0]), 500e18 + 50e18);
 
-        // TODO:
-        // claimer should be marker
-        // claimer should get expected reward
         // lost voter's deposit should burned
+        assertEq(Credit(credit).balanceOf(againstVoters[0]), 100e18);
+
+        // claimer should be marker
+        
+        
+        // claimer should get expected reward
     }
 }
