@@ -99,16 +99,20 @@ contract ClaimServiceTest is Test {
     }
 
     function test_when_claim_notAbleToClaim_should_return_NOT_ABLE_TO_ClAIM() public {
-        vm.prank(marker);
+        address claimer = testHelper.createRoleAndDeal("claimer", 500e18);
+        vm.startPrank(claimer);
         ErrorCodes result = controllerProxy.claim(DUMMY_SCAM_HASH);
+        vm.stopPrank();
 
         assertEq(uint(result), uint(ErrorCodes.NOT_ABLE_TO_ClAIM));
     }
 
     function test_when_claim_should_return_OK() public {
-        vm.prank(marker);
+        address claimer = testHelper.createRoleAndDeal("claimer", 500e18);
+        vm.startPrank(claimer);
         vm.warp(block.timestamp + 7 days + 1);
         ErrorCodes result = controllerProxy.claim(DUMMY_SCAM_HASH);
+        vm.stopPrank();
 
         assertEq(uint(result), uint(ErrorCodes.OK));
     }
