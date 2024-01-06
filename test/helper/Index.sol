@@ -25,6 +25,11 @@ abstract contract PermissionsTestHelper is Test {
         addr = makeAddr("voter");
         deal(_credit, addr, 500e18);
     }
+
+    function createRoleAndDeal(string calldata role, uint256 amount) external returns (address addr) {
+        addr = makeAddr(role);
+        deal(_credit, addr, amount);
+    }
 }
 
 contract TestHelper is PermissionsTestHelper {
