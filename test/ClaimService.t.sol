@@ -92,10 +92,10 @@ contract ClaimServiceTest is Test {
     }
 
     function test_when_claim_notMarker_should_return_NOT_MARKER() public {
-        vm.prank(agreeVoters[0]);
+        vm.prank(marker);
         ErrorCodes result = controllerProxy.claim(DUMMY_SCAM_HASH);
 
-        assertEq(uint(result), uint(ErrorCodes.NOT_MARKER));
+        assertEq(uint(result), uint(ErrorCodes.MARKER_NOT_ALLOW_TO_CLAIM));
     }
 
     function test_when_claim_notAbleToClaim_should_return_NOT_ABLE_TO_ClAIM() public {
@@ -114,9 +114,11 @@ contract ClaimServiceTest is Test {
     }
 
     function test_when_successful_claim_should_obtain_expected_result() public {
-        vm.prank(marker);
+        address claimer = testHelper.createRoleAndDeal("claimer", 500e18);
+        vm.startPrank(claimer);
         vm.warp(block.timestamp + 7 days + 1);
         controllerProxy.claim(DUMMY_SCAM_HASH);
+        vm.stopPrank();
 
         // reader get expected result
         address reader = testHelper.createReader();
@@ -139,9 +141,7 @@ contract ClaimServiceTest is Test {
         // lost voter's deposit should burned
         assertEq(Credit(credit).balanceOf(againstVoters[0]), 100e18);
 
-        // claimer should be marker
-        
-        
         // claimer should get expected reward
+        assertEq(Credit(credit).balanceOf(claimer), 550e18);
     }
 }

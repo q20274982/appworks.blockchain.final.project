@@ -14,12 +14,13 @@ interface IClaimSerivce {
 contract ClaimService is IClaimSerivce, CommomStorage {
 
     uint256 public constant DURATION = 7 days;
-    uint256 public constant RewardAmount = 50e18;
+    uint256 public constant VoterRewardAmount = 50e18;
+    uint256 public constant ClaimerRewardAmount = 50e18;
 
     function claim(bytes32 scamHash) public returns (ErrorCodes) {
         if (!hasMarkedMap[scamHash]) return ErrorCodes.UN_MARKED; 
         MarkInfo memory markInfo = marksInfoMap[scamHash];
-        if (markInfo.creator != msg.sender) return ErrorCodes.NOT_MARKER;
+        if (markInfo.creator == msg.sender) return ErrorCodes.MARKER_NOT_ALLOW_TO_CLAIM;
         if (block.timestamp <= markInfo.createTime + DURATION) return ErrorCodes.NOT_ABLE_TO_ClAIM;
 
         _processingReward(scamHash);
@@ -46,7 +47,7 @@ contract ClaimService is IClaimSerivce, CommomStorage {
         for(uint256 i = 0; i < rewardList.length; i++) {
             address winner = rewardList[i];
             uint256 voterDepositAmount = index[rewardList[i]];
-            uint256 systeamRewardAmount = _getSysteamReward();
+            uint256 systeamRewardAmount = _getVoterSysteamReward();
 
             Credit(tokenAddr).mint(winner, systeamRewardAmount);
             IERC20(tokenAddr).transfer(winner, voterDepositAmount);
@@ -58,11 +59,18 @@ contract ClaimService is IClaimSerivce, CommomStorage {
 
             Credit(tokenAddr).burnFrom(loser, voterDepositAmount);
         }
+
+        uint256 claimerRewardAmount = _getClaimerSysteamReward();
+        Credit(tokenAddr).mint(msg.sender, claimerRewardAmount);
     }
 
-    function _getSysteamReward() private pure returns(uint256) {
+    function _getClaimerSysteamReward() private pure returns(uint256) {
+        return ClaimerRewardAmount;
+    }
+
+    function _getVoterSysteamReward() private pure returns(uint256) {
         // TODO: replace with dynamic reward
-        return RewardAmount;
+        return VoterRewardAmount;
     }
 }
 
