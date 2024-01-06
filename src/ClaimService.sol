@@ -28,17 +28,17 @@ contract ClaimService is IClaimSerivce, CommomStorage {
     }
 
     function _processingReward(bytes32 scamHash) private {
-        ScordBoard storage scordBoard = scordBoardMap[scamHash];
+        ScoreBoard storage scoreBoard = scoreBoardMap[scamHash];
 
-        bool isAgreeWin = scordBoard.agreeScore >= scordBoard.againstScore;
-        address[] memory list = isAgreeWin ? scordBoard.agree : scordBoard.against;
-        mapping(address => uint256) storage index = isAgreeWin ? scordBoard.agreeIndex : scordBoard.againstIndex;
+        bool isAgreeWin = scoreBoard.agreeScore >= scoreBoard.againstScore;
+        address[] memory list = isAgreeWin ? scoreBoard.agree : scoreBoard.against;
+        mapping(address => uint256) storage index = isAgreeWin ? scoreBoard.agreeIndex : scoreBoard.againstIndex;
 
         hasMarkedResultMap[scamHash] = true;
         marksResultMap[scamHash] = MarkResult({
             isScam: isAgreeWin,
             totalVoter: list.length,
-            ratio: scordBoard.agreeScore * 100 / (scordBoard.agreeScore + scordBoard.againstScore)
+            ratio: scoreBoard.agreeScore * 100 / (scoreBoard.agreeScore + scoreBoard.againstScore)
         });
 
         for(uint256 i = 0; i < list.length; i++) {

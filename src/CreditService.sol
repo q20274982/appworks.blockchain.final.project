@@ -7,7 +7,7 @@ import "./enum/ErrorCodes.sol";
 import "./CommomStorage.sol";
 import "./Permissions.sol";
 import "./struct/Mark.sol";
-import "./struct/Scord.sol";
+import "./struct/Score.sol";
 import "./helper/Helper.sol";
 
 interface ICreditService {
@@ -65,14 +65,14 @@ contract CreditService is ICreditService, CommomStorage, Helper {
     function _vote(bytes32 scamHash, uint256 amount, bool position, address voter) internal {
         // 1. 紀錄 voter 的投票選項, 金額, 哪一筆 mark
         if (position) {
-            scordBoardMap[scamHash].agree.push(voter);
-            scordBoardMap[scamHash].agreeIndex[voter] = amount;
-            scordBoardMap[scamHash].agreeScore = _calculateScore(scordBoardMap[scamHash].agreeScore, amount);
+            scoreBoardMap[scamHash].agree.push(voter);
+            scoreBoardMap[scamHash].agreeIndex[voter] = amount;
+            scoreBoardMap[scamHash].agreeScore = _calculateScore(scoreBoardMap[scamHash].agreeScore, amount);
 
         } else {
-            scordBoardMap[scamHash].against.push(voter);
-            scordBoardMap[scamHash].againstIndex[voter] = amount;
-            scordBoardMap[scamHash].againstScore = _calculateScore(scordBoardMap[scamHash].againstScore, amount);
+            scoreBoardMap[scamHash].against.push(voter);
+            scoreBoardMap[scamHash].againstIndex[voter] = amount;
+            scoreBoardMap[scamHash].againstScore = _calculateScore(scoreBoardMap[scamHash].againstScore, amount);
 
         }
 

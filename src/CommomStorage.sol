@@ -3,7 +3,7 @@
 pragma solidity ^0.8.20;
 
 import "./struct/Mark.sol";
-import "./struct/Scord.sol";
+import "./struct/Score.sol";
 
 abstract contract CommomStorage {
     // 紀錄 ERC-20 token 地址
@@ -16,7 +16,7 @@ abstract contract CommomStorage {
     mapping(bytes32 => MarkInfo) internal marksInfoMap;
 
     // 紀錄 mark 投票計分板
-    mapping(bytes32 => ScordBoard) internal scordBoardMap;
+    mapping(bytes32 => ScoreBoard) internal scoreBoardMap;
 
     // 紀錄 mark 是否結果
     mapping(bytes32 => bool) internal hasMarkedResultMap;

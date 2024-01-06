@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.20;
 
-struct ScordBoard {
+struct ScoreBoard {
     uint256 agreeScore;
     uint256 againstScore;
     
