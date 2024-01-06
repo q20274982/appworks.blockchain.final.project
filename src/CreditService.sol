@@ -116,4 +116,12 @@ contract CreditService is ICreditService, CommomStorage, Helper {
         return marks;
     }
 
+    function readAggrateMark(string calldata scam) view public returns (bytes memory) {
+        bytes32 scamHash = encrept(scam);
+
+        return abi.encode(Mark({
+            markInfo: marksInfoMap[scamHash],
+            markResult: marksResultMap[scamHash]
+        }));
+    }
 }

@@ -16,7 +16,14 @@ struct MarkInfo {
 struct MarkResult {
     bool isScam;
 
-    uint256 totalVoter;
+    uint256 agreeVoter;
+
+    uint256 againstVoter;
 
     uint256 ratio;
+}
+
+struct Mark {
+    MarkInfo markInfo;
+    MarkResult markResult;
 }

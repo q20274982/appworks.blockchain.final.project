@@ -29,13 +29,9 @@ contract ControllerV1 is ClaimService, CreditService, Permissions {
     }
 
     function readMark(string calldata scam) onlyReader public view returns (bytes memory) {
-        return readMarkInfo(scam);
+        return readAggrateMark(scam);
     }
 
-    function readMarks(string[] calldata scams) onlyReader public view returns (bytes[] memory) {
-        return readMarkInfos(scams);
-    }
-    
     function voteMark(string calldata scam, bool isAgree, uint256 amount) onlyVoter public returns(ErrorCodes){
         return vote(scam, isAgree, amount);
     }
