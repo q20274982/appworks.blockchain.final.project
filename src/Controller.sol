@@ -40,7 +40,7 @@ contract ControllerV1 is ClaimService, CreditService, Permissions {
         return claim(scamHash);
     }
 
-    function VERSION() public pure returns (string memory) {
+    function VERSION() virtual public pure returns (string memory) {
         return "0.0.1";
     }
 }

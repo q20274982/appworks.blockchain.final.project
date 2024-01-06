@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.20;
 
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-
-contract ControllerProxy is Ownable {
+contract ControllerProxy {
 
     bytes32 constant private _SLOTADDRESS = bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1);
+    bytes32 constant private ADMIN_SLOT = bytes32(uint256(keccak256("eip1967.proxy.admin")) - 1);
 
-    constructor(address _implementation) Ownable(msg.sender) {
+
+    constructor(address _implementation) {
         _setSlotToAddress(_SLOTADDRESS, _implementation);
+        _setSlotToAddress(ADMIN_SLOT, msg.sender);
     }
 
     fallback() external payable virtual {
@@ -17,14 +18,20 @@ contract ControllerProxy is Ownable {
 
     receive() external payable {}
 
-    function upgradeTo(address _newImpl) public virtual onlyOwner {
+    function upgradeTo(address _newImpl) public virtual onlyAdmin {
         _setSlotToAddress(_SLOTADDRESS, _newImpl);
     }
 
-    function upgradeToAndCall(address _newImpl, bytes memory data) public virtual onlyOwner{
+    function upgradeToAndCall(address _newImpl, bytes memory data) public virtual onlyAdmin{
         _setSlotToAddress(_SLOTADDRESS, _newImpl);
         (bool success, ) = _newImpl.delegatecall(data);
         require(success);
+    }
+
+    modifier onlyAdmin {
+    address _admin = _getSlotToAddress(ADMIN_SLOT);
+    require(msg.sender == _admin, "ERC1967Proxy: admin only");
+    _;
     }
 
     function _delegate(address _implementation) private {

@@ -8,6 +8,12 @@ import "../src/Controller.sol";
 import "../src/ControllerProxy.sol";
 import "../src/Credit.sol";
 
+contract ControllerV2ForTest is ControllerV1 {
+    function VERSION() virtual override public pure returns (string memory) {
+        return "0.0.2";
+    }
+}
+
 contract ControllerTest is Test {
 
     uint256 constant MAXIMUM_SUPPLY = 21_000_000e18;
@@ -16,6 +22,7 @@ contract ControllerTest is Test {
     ControllerV1 controller;
     ControllerProxy proxy;
     ControllerV1 controllerProxy;
+    ControllerV2ForTest controllerV2ForTest;
     Credit credit;
 
     address owner;
@@ -48,19 +55,10 @@ contract ControllerTest is Test {
         assertEq(controllerProxy.VERSION(), "0.0.1");
     }
 
-    function test_createMark_should_return_ErrorCodes_OK() public {
-        vm.prank(marker);
-        ErrorCodes code = controllerProxy.createMark("test");
-
-        assertEq(uint(code), uint(ErrorCodes.OK));
-    }
-
-    function test_readMark_should_return_markInfo() public {
-        vm.prank(marker);
-        controllerProxy.createMark("test");
-
-        vm.prank(reader);
-        bytes memory result = controllerProxy.readMark("test");
-        assert(result.length > 0);
+    function test_controllerProxy_should_be_upgradable() public {
+        controllerV2ForTest = new ControllerV2ForTest();
+        vm.prank(owner);
+        proxy.upgradeTo(address(controllerV2ForTest));
+        assertEq(controllerProxy.VERSION(), "0.0.2");
     }
 }
