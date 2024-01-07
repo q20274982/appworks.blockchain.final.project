@@ -1,95 +1,104 @@
-## 題目
+# appworks.blockchains.final.project
 
-鏈上版的 whoscall 但標記的不是電話號碼 可以是一段網址或是信箱
+## Description
 
-## 角色
-- 提供者
-  - 標記者 RP
-  - 投票者 VO
-  - 提供者的收益來源
-    - 沒收的資金池
-    - 代幣買盤推漲的代幣單價
-    - pool 的 reward
+這個專案想做鏈上版的 Whoscall, 可以對可疑的 email 或是 domain 做辨識以及防範, 透過持有平台代幣, 每個人都可以參與 `標記` , `投票`, `結算`及`辨識`
+在建立標記後, 就進入投票機制的環節, 投票區分 `agree` 和 `against` 兩方, 不論參與哪方都可以投入不限制數量的平台代幣, 投入代幣後會經過平方根計入分數內, 如下
+```
+# agree 有兩位投票者, 分別投了 100, 400 顆平代幣, 平方根後加總的分數是 30
+- agree [100, 400] => score: 30
 
-- 使用者 US
+# against 有一位投票者, 投了 625 顆平代幣, 平方根後分數是 25
+- against [625] => socre: 25
+```
+因此最後進行到結算的環節時, 會返回投 agree 使用者初始 deposit 的數量以及系統獎勵, 而一開始被標記的資訊也會因為 agree 分數較高, 被標記為可疑, 提供辨識及防範
 
----
-## 系統功能
-- 儲值 - 成為對應角色以及執行功能需要支付token, 因此需要儲值功能
-- 回報 - RP 可以對對應目標執行回報功能, 開啟後續投票功能
-- 投票 - VO 可以對已經被回報的目標執行投票功能, 會影響目標的加權分數
-- 獎勵 - 加權分數高的投票池內的使用者可以取回原本 token & 外還有 token 獎勵
-- 讀取 - US 需要持有 `US_THRESHOLD` token 才能讀取資料
+## Functional
+- 儲值: 初始沒有 Token 時，沒辦法兌換票數進行投票，因此需要先儲值
+- 建立標記: 使用者可以對可疑的 email 或是 domain 進行標記
+- 參與投票: 使用者可以在對已經被標記的資訊投票
+- 結算投票: 在經過指定日期後的標記資訊的投票, 可以被結算
+- 角色驗證: 上方各個功能都需要持有最少指定數量的Token, 才能發起
 
-## Component
-- Token - ERC20 token 用於獎勵 & 角色門檻
-- Service
-  - Mark - 實作標記功能
-  - Vote - 實作投票功能
-  - Read - 實作讀取功能
-- RewardModal - 獎勵機制
-- ProxyPattern for Service
+## Flow
+```mermaid
+flowchart LR
+init(開始標記)
+createMark[建立標記]
+startVote[進行投票]
+claimMark[投票結算]
+stateMark[紀錄最終結果]
+endMark(完成標記)
 
+init --> createMark
+subgraph 為期七天的投票
+createMark --> startVote
+startVote --> claimMark
+end
+claimMark --> stateMark
+stateMark --> endMark
 
-## 變數
-```javascript
-RP_THRESHOLD // 成為回報者的門檻
-VO_THRESHOLD // 成為投票者的門檻
-US_THRESHOLD // 使用者要讀取資料的門檻
-TAG_COST = 50 // 標記的費用
-DEADLINE = 3 // 截止日期
-QA_ALG() // 演算法
 ```
 
+## Framework
+- Credit: 做為平台幣使用，實現 ERC-20 標準, 作為後續 投票, 獎勵 使用
+- ControllerV1: 作為對外公開介面的核心合約，繼承 ClaimService, CreditService
+- ControllerProxy: proxy 合約, 用於 proxy Controller 合約
+- ClaimService: 實作投票後結算, 返還, 獎勵, 沒收 Credit 的功能
+- CreditService: 實做 標記, 投票, 讀取 的功能
+- Permissions: 驗證各角色的權限
+- CommomStroage: 作為 ClaimService 以及 CreditService 共用的 Stroage 配置
+
+```mermaid
 ---
-## 使用者故事
-- 使用者成為 US
-  - 使用者持有 `US_THRESHOLD` 數量的 token => 在每個 US 會呼叫的 function 加上 modifier
-  - 
-- 使用者成為 RP
-  - 使用者持有 `RP_THRESHOLD` 數量的 token => 在每個 RP 會呼叫的 function 加上 modifier
-
-- 使用者成為 VO
-  - 使用者持有 `VO_THRESHOLD` 數量的 token => 在每個 VO 會呼叫的 function 加上 modifier
-  
-- RP 對 URL 標記 scam
-  - RP 對 URL 標記 scam => protocol 轉移 RP `TAG_COST` token 到 pool
-  
-- VO 可以對被標記的 URL 投票, 假設 VO 投讚成票, URL 以特定演算法加權權重
-  - VO 對 URL 投贊成票 => protocol 轉移 RP `QA_ALG(token amount)` token 到 贊成 pool
-  
-- VO 可以對被標記的 URL 投票, 假設 VO 投反對票, URL 以特定演算法減低權重
-  - VO 對 URL 投贊成票 => protocol 轉移 RP `QA_ALG(token amount)` token 到 反對 pool
-  - 
-- VO 可以對 URL 進行檢索, 檢索是否有被投票以及加權紀錄, 藉此判定 URL 484 scam
-  - VO 對 URL 呼叫鏈上 view 方法 進行查詢標記紀錄
-
+title:
 ---
-## 漏洞
-- Q. 如何預防亂投票的 RP ?
-  - A. 持有一定數量 token 的門檻, e.g. 持有 `RP_THRESHOLD` token 才有投票權
-  - A. 投票要質押一定數量 token, 當被認定是來亂的, 沒收 token e.g. 標記一個 URL 要先質押 50 token
-- Q.如何預防假帳號 VO 灌票?
-  - A. 持有一定數量 token 的門檻, e.g. 持有 `VO_THRESHOLD` token 才有投票權
-  - A. 投票要質押一定數量 token, 當被認定是來亂的, 沒收 token e.g. 標記一個 URL 要先質押 50 token
-- Q. 如何確保人多比錢多有更高權重?
-  - A. Quadratic Funding 機制
-- Q. 投票有沒有 deadline ?
-  - A. 先假定 `DEADLINE` 天
-- Q. 單一標記投入的 token 有沒有上限 ?
-  - A. 好像沒必要 (?
-- Q. 提供者角色如何取得對應報酬?
-  - A. 參考最上方
-- **Q. 使用者如何為資訊付費?**
-  - A. 讀取時 reqiure `US_THRESHOLD` token 數量的門檻
-- Q. 好像不能無限增發 token?
-  - A. 學 BTC POS 機制, 發行上限
+classDiagram 
+    ControllerV1 <|-- ControllerProxy : Proxy
+    CreditService <|-- ControllerV1 : Extend
+    ClaimService <|-- ControllerV1 : Extend
+    Permissions <|-- ControllerV1 : Extend
+    CommonStorage <|-- CreditService : Extend
+    CommonStorage <|-- ClaimService : Extend
 
+    class ControllerV1 {
+      +createMark(): ErrorCodes
+      +readMark(): bytes
+      +voteMark(): ErrorCodes
+      +claimMark(): ErrorCodes
+      +VERSION(): string
+    }
+    
+    class CreditService {
+      +mark(string scam): ErrorCodes
+      +vote(string scam, bool isAgree, uint256 amount): ErrorCodes
+      +readMarkInfo(string scam): bytes
+      +readMarkInfos(string[] scams): bytes[]
+      +readMarkResult(string scam): bytes
+      +readMarkResults(string[] scams): bytes[]
+    }
+    
+    class ClaimService {
+      +claim(bytes32 scamHash): ErrorCodes
+    }
+    
+    class CommonStorage {
+      ~address tokenAddress
+      ~mapping(bytes32 => bool) hasMarkedMap
+      ~mapping(bytes32 => MarkInfo) marksInfoMap
+      ~mapping(bytes32 => ScoreBoard) scoreBoardMap
+      ~mapping(bytes32 => bool) hasMarkedResultMap
+      ~mapping(bytes32 => MarkResult) marksResultMap
+    }
+    
+    class Permissions {
+      +onlyReader
+      +onlyMarker
+      +onlyVoter
+    }
+    
+    class Credit {
+    
+    }
 
----
-## token
-- 當質押錯池子 沒收錯誤池子的資金 沒收一部分的資金用於獎勵正確的提供者 => 防止灌水, 假資訊
-- 
-
-## 一些很酷可能有幫助的 idea
-- 
+```
